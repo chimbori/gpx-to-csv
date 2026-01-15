@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
 func main() {
@@ -39,13 +40,14 @@ func parseGpx(files []string) {
 		for _, track := range gpx.Tracks {
 			for _, segment := range track.Segments {
 				for _, point := range segment.Points {
+					localTimestamp := utcToLocalTime(point.Timestamp)
 					csvRow = []string{
-						"./" + point.Timestamp + ".jpg", // SourceFile,
-						point.Timestamp,                 // GPSDateTime
-						floatToString(point.Latitude),   // GPSLatitude
-						latitudeRef(point.Latitude),     // GPSLatitudeRef
-						floatToString(point.Longitude),  // GPSLongitude
-						longitudeRef(point.Longitude),   // GPSLongitudeRef
+						"./" + localTimestamp + ".jpg", // SourceFile,
+						localTimestamp,                 // GPSDateTime
+						floatToString(point.Latitude),  // GPSLatitude
+						latitudeRef(point.Latitude),    // GPSLatitudeRef
+						floatToString(point.Longitude), // GPSLongitude
+						longitudeRef(point.Longitude),  // GPSLongitudeRef
 					}
 					if err := w.Write(csvRow); err != nil {
 						log.Fatalln("error writing record to csv:", err)
@@ -60,6 +62,15 @@ func parseGpx(files []string) {
 	if err := w.Error(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func utcToLocalTime(utcTimeStr string) string {
+	utcTime, err := time.Parse(time.RFC3339, utcTimeStr)
+	if err != nil {
+		log.Printf("error parsing timestamp %s: %v", utcTimeStr, err)
+		return utcTimeStr // Return original if parsing fails.
+	}
+	return utcTime.Local().Format(time.RFC3339)
 }
 
 func floatToString(f float64) string {
