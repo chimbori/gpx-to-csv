@@ -21,7 +21,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err := convertGpxFile(flag.Args())
+	err := convertGpxFile(os.Stdout, flag.Args())
 	if err != nil {
 		slog.Error("conversion failed", tint.Err(err))
 		os.Exit(1)

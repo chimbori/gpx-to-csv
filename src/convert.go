@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"strconv"
@@ -11,8 +12,8 @@ import (
 	"github.com/lmittmann/tint"
 )
 
-func convertGpxFile(files []string) error {
-	w := csv.NewWriter(os.Stdout)
+func convertGpxFile(output io.Writer, files []string) error {
+	w := csv.NewWriter(output)
 	defer w.Flush()
 
 	csvRow := []string{"SourceFile", "GPSDateTime", "GPSLatitude", "GPSLatitudeRef", "GPSLongitude", "GPSLongitudeRef"}
