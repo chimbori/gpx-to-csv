@@ -42,12 +42,12 @@ func parseGpx(files []string) {
 				for _, point := range segment.Points {
 					localTimestamp := utcToLocal(point.Timestamp)
 					csvRow = []string{
-						"./" + localTimestamp + ".jpg", // SourceFile,
-						localTimestamp,                 // GPSDateTime
-						floatToString(point.Latitude),  // GPSLatitude
-						latitudeRef(point.Latitude),    // GPSLatitudeRef
-						floatToString(point.Longitude), // GPSLongitude
-						longitudeRef(point.Longitude),  // GPSLongitudeRef
+						"./" + localTimestamp + ".jpg",   // SourceFile,
+						localTimestamp,                   // GPSDateTime
+						precision7digit(point.Latitude),  // GPSLatitude
+						latitudeRef(point.Latitude),      // GPSLatitudeRef
+						precision7digit(point.Longitude), // GPSLongitude
+						longitudeRef(point.Longitude),    // GPSLongitudeRef
 					}
 					if err := w.Write(csvRow); err != nil {
 						log.Fatalln("error writing record to csv:", err)
@@ -73,9 +73,7 @@ func utcToLocal(utcTimeStr string) string {
 	return utcTime.Local().Format(time.RFC3339)
 }
 
-func floatToString(f float64) string {
-	return strconv.FormatFloat(f, 'f', 7, 64)
-}
+func precision7digit(f float64) string { return strconv.FormatFloat(f, 'f', 7, 64) }
 
 func latitudeRef(lat float64) string {
 	if lat > 0 {
