@@ -40,7 +40,7 @@ func parseGpx(files []string) {
 		for _, track := range gpx.Tracks {
 			for _, segment := range track.Segments {
 				for _, point := range segment.Points {
-					localTimestamp := utcToLocalTime(point.Timestamp)
+					localTimestamp := utcToLocal(point.Timestamp)
 					csvRow = []string{
 						"./" + localTimestamp + ".jpg", // SourceFile,
 						localTimestamp,                 // GPSDateTime
@@ -64,7 +64,7 @@ func parseGpx(files []string) {
 	}
 }
 
-func utcToLocalTime(utcTimeStr string) string {
+func utcToLocal(utcTimeStr string) string {
 	utcTime, err := time.Parse(time.RFC3339, utcTimeStr)
 	if err != nil {
 		log.Printf("error parsing timestamp %s: %v", utcTimeStr, err)
