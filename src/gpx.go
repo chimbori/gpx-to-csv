@@ -25,7 +25,7 @@ type GPXPoint struct {
 	Timestamp string  `xml:"time,omitempty"`
 }
 
-func ParseBytes(buf []byte) (*GPX, error) {
+func parseGpx(buf []byte) (*GPX, error) {
 	decoder := xml.NewDecoder(bytes.NewReader(buf))
 	gpx := &GPX{}
 	err := decoder.Decode(&gpx)

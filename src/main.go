@@ -23,11 +23,17 @@ func main() {
 		fmt.Printf("Usage: %s <file> <file> ...\n", filepath.Base(os.Args[0]))
 		os.Exit(1)
 	}
-	parseGpx(flag.Args())
+
+	err := convertFile(flag.Args())
+	if err != nil {
+		slog.Error("conversion failed", tint.Err(err))
+		os.Exit(1)
+	}
 }
 
-func parseGpx(files []string) {
+func convertFile(files []string) error {
 	w := csv.NewWriter(os.Stdout)
+	defer w.Flush()
 
 	csvRow := []string{"SourceFile", "GPSDateTime", "GPSLatitude", "GPSLatitudeRef", "GPSLongitude", "GPSLongitudeRef"}
 	if err := w.Write(csvRow); err != nil {
@@ -37,10 +43,15 @@ func parseGpx(files []string) {
 
 	for _, file := range files {
 		slog.Info(file)
+
 		gpxBytes, err := os.ReadFile(file)
-		gpx, err := ParseBytes(gpxBytes)
 		if err != nil {
-			slog.Error("parse error", tint.Err(err))
+			return fmt.Errorf("error reading file: %w", err)
+		}
+
+		gpx, err := parseGpx(gpxBytes)
+		if err != nil {
+			return fmt.Errorf("error parsing file: %w", err)
 		}
 
 		for _, track := range gpx.Tracks {
@@ -56,20 +67,14 @@ func parseGpx(files []string) {
 						longitudeRef(point.Longitude),    // GPSLongitudeRef
 					}
 					if err := w.Write(csvRow); err != nil {
-						slog.Error("error writing record to csv", tint.Err(err))
-						os.Exit(1)
+						return fmt.Errorf("error writing CSV: %w", err)
 					}
 				}
 			}
 		}
 	}
 
-	w.Flush()
-
-	if err := w.Error(); err != nil {
-		slog.Error("csv flush error", tint.Err(err))
-		os.Exit(1)
-	}
+	return nil
 }
 
 func utcToLocal(utcTimeStr string) string {
