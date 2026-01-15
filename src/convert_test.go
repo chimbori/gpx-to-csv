@@ -99,3 +99,100 @@ func TestUtcToLocalConversion(t *testing.T) {
 		t.Errorf("converted time does not represent the same instant: input=%v, result=%v", parsedInput, parsedResult)
 	}
 }
+
+func TestPrecision7digit(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    float64
+		expected string
+	}{
+		{
+			name:     "positive latitude",
+			input:    40.7128,
+			expected: "40.7128000",
+		},
+		{
+			name:     "negative latitude",
+			input:    -74.0060,
+			expected: "-74.0060000",
+		},
+		{
+			name:     "zero",
+			input:    0.0,
+			expected: "0.0000000",
+		},
+		{
+			name:     "small positive number",
+			input:    0.0000001,
+			expected: "0.0000001",
+		},
+		{
+			name:     "small negative number",
+			input:    -0.0000001,
+			expected: "-0.0000001",
+		},
+		{
+			name:     "number with more than 7 decimal places",
+			input:    3.141592653589793,
+			expected: "3.1415927",
+		},
+		{
+			name:     "large positive number",
+			input:    123456.789,
+			expected: "123456.7890000",
+		},
+		{
+			name:     "large negative number",
+			input:    -123456.789,
+			expected: "-123456.7890000",
+		},
+		{
+			name:     "single decimal place",
+			input:    45.5,
+			expected: "45.5000000",
+		},
+		{
+			name:     "integer-like float",
+			input:    90.0,
+			expected: "90.0000000",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := precision7digit(tt.input)
+			if result != tt.expected {
+				t.Errorf("precision7digit(%v) = %s, want %s", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestPrecision7digitDecimalCount(t *testing.T) {
+	// Verify that the result always has exactly 7 decimal places
+	testValues := []float64{1.0, -1.0, 0.0, 123.456, -789.012, 3.141592653589793}
+
+	for _, val := range testValues {
+		result := precision7digit(val)
+
+		// Find the decimal point
+		decimalIndex := -1
+		for i, ch := range result {
+			if ch == '.' {
+				decimalIndex = i
+				break
+			}
+		}
+
+		if decimalIndex == -1 {
+			t.Errorf("precision7digit(%v) = %s, expected to contain a decimal point", val, result)
+			continue
+		}
+
+		// Count decimal places
+		decimalPlaces := len(result) - decimalIndex - 1
+		if decimalPlaces != 7 {
+			t.Errorf("precision7digit(%v) = %s has %d decimal places, expected 7", val, result, decimalPlaces)
+		}
+	}
+}
