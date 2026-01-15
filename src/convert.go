@@ -38,7 +38,10 @@ func convertGpxFile(output io.Writer, files []string) error {
 		for _, track := range gpx.Tracks {
 			for _, segment := range track.Segments {
 				for _, point := range segment.Points {
-					localTimestamp := utcToLocal(point.Timestamp)
+					localTimestamp, err := utcToLocal(point.Timestamp)
+					if err != nil {
+						slog.Error("timestamp failed", tint.Err(err))
+					}
 					csvRow = []string{
 						"./" + localTimestamp + ".jpg",   // SourceFile,
 						localTimestamp,                   // GPSDateTime
@@ -58,13 +61,12 @@ func convertGpxFile(output io.Writer, files []string) error {
 	return nil
 }
 
-func utcToLocal(utcTimeStr string) string {
+func utcToLocal(utcTimeStr string) (string, error) {
 	utcTime, err := time.Parse(time.RFC3339, utcTimeStr)
 	if err != nil {
-		slog.Error("error parsing timestamp", tint.Err(err), "timestamp", utcTimeStr)
-		return utcTimeStr // Return original if parsing fails.
+		return utcTimeStr, fmt.Errorf("error parsing [%s], %w", utcTimeStr, err) // Return original if parsing fails.
 	}
-	return utcTime.Local().Format(time.RFC3339)
+	return utcTime.Local().Format(time.RFC3339), nil
 }
 
 func precision7digit(f float64) string { return strconv.FormatFloat(f, 'f', 7, 64) }
